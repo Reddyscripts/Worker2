@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: telegram-userbot
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    nodeVersion: 18
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+    buildFilter:
+      paths:
+        - index.js
+        - anon.session
+        - package.json
