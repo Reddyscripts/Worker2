@@ -1,40 +1,50 @@
 import { TelegramClient } from "telegram";
-import { StringSession } from "telegram/sessions";
+import { StringSession } from "telegram/sessions/index.js";
+import input from "input";
+import fs from "fs";
+import { Api } from "telegram";
 
-// Your API credentials
-const apiId = 14797328;
-const apiHash = "7c1a7af11a78400fb8e522ca17196b78";
+const apiId = 14797328; // replace with your actual api_id
+const apiHash = "7c1a7af11a78400fb8e522ca17196b78"; // replace with your actual api_hash
+const stringSession = new StringSession(fs.readFileSync("anon.session", "utf-8"));
 
-// Empty string because session will load from anon.session file automatically
-const stringSession = "";
-
-const sourceGroupId = BigInt("1002568140829");
-const targetGroupId = BigInt("1002578841900");
+const sourceGroupId = BigInt("-1002568140829");
+const targetGroupId = BigInt("-1002578841900");
 const botUsername = "a16478293_bot";
 
+const client = new TelegramClient(stringSession, apiId, apiHash, {
+  connectionRetries: 5,
+});
+
 (async () => {
-  const client = new TelegramClient(new StringSession(stringSession), apiId, apiHash, {
-    connectionRetries: 5,
-  });
-
   await client.start({
-    // No login prompts needed because session file is used
-    onError: (err) => console.error(err),
+    phoneNumber: async () => await input.text("Number?"),
+    password: async () => await input.text("2FA Password?"),
+    phoneCode: async () => await input.text("Code?"),
+    onError: (err) => console.log(err),
   });
 
-  console.log("Client started!");
+  console.log("Client started. Listening for messages...");
+
+  const botEntity = await client.getEntity(botUsername);
 
   client.addEventHandler(async (event) => {
-    const msg = event.message;
-    if (
-      msg.peerId?.channelId === sourceGroupId &&
-      msg.senderId?.userId &&
-      msg.sender?.username === botUsername
-    ) {
-      // Send message text to target group without forwarding info
-      await client.sendMessage(targetGroupId, { message: msg.text || msg.message || "" });
-      console.log("Copied message to target group");
-    }
-  }, new client.events.NewMessage({}));
+    const message = event.message;
 
+    if (
+      message.chatId === sourceGroupId &&
+      message.senderId &&
+      message.senderId.value === botEntity.id
+    ) {
+      try {
+        await client.sendMessage(targetGroupId, {
+          message: message.message,
+          parseMode: "html",
+        });
+        console.log("Message copied.");
+      } catch (err) {
+        console.error("Failed to send message:", err);
+      }
+    }
+  }, new client.constructor.events.NewMessage({ chats: [sourceGroupId] }));
 })();
