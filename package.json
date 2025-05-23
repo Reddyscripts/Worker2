@@ -1,12 +1,13 @@
 {
   "name": "telegram-userbot",
   "version": "1.0.0",
-  "type": "module",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "telegram": "^1.11.0"
+    "telegram": "^1.15.4",
+    "input": "^1.0.1"
   }
 }
