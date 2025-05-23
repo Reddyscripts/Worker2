@@ -5,38 +5,36 @@ import { StringSession } from "telegram/sessions";
 const apiId = 14797328;
 const apiHash = "7c1a7af11a78400fb8e522ca17196b78";
 
-// Session file generated from Python step
-const sessionFile = "anon.session";
+// Empty string because session will load from anon.session file automatically
+const stringSession = "";
 
-// IDs of your groups (replace with your real groups)
-const sourceGroupId = BigInt(-1002568140829);  // Group where bot sends messages
-const targetGroupId = BigInt(-1002578841900);  // Group to copy messages into
+const sourceGroupId = BigInt("1002568140829");
+const targetGroupId = BigInt("1002578841900");
+const botUsername = "a16478293_bot";
 
-async function main() {
-  const client = new TelegramClient(sessionFile, apiId, apiHash, {
+(async () => {
+  const client = new TelegramClient(new StringSession(stringSession), apiId, apiHash, {
     connectionRetries: 5,
   });
 
-  await client.start();
-  console.log("Userbot started.");
-
-  client.addEventHandler(async (event) => {
-    try {
-      const message = event.message;
-      const sender = await event.getSender();
-
-      if (sender?.username === "a16478293_bot" && event.chatId === sourceGroupId) {
-        await client.sendMessage(targetGroupId, {
-          message: message.text || "",
-        });
-        console.log("Copied message without forward tag.");
-      }
-    } catch (e) {
-      console.error("Error handling message:", e);
-    }
+  await client.start({
+    // No login prompts needed because session file is used
+    onError: (err) => console.error(err),
   });
 
-  await client.runUntilDisconnected();
-}
+  console.log("Client started!");
 
-main();
+  client.addEventHandler(async (event) => {
+    const msg = event.message;
+    if (
+      msg.peerId?.channelId === sourceGroupId &&
+      msg.senderId?.userId &&
+      msg.sender?.username === botUsername
+    ) {
+      // Send message text to target group without forwarding info
+      await client.sendMessage(targetGroupId, { message: msg.text || msg.message || "" });
+      console.log("Copied message to target group");
+    }
+  }, new client.events.NewMessage({}));
+
+})();
