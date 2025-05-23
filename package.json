@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "telegram": "^2.0.0",
-    "input": "^0.3.1"
+    "prompts": "^2.4.2"
   }
 }
