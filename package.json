@@ -7,7 +7,6 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "telegram": "^2.0.0",
-    "prompts": "^2.4.2"
+    "telegram": "^2.0.0"
   }
 }
