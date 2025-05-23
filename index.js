@@ -1,44 +1,42 @@
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
-import prompts from "prompts";
 
-const apiId = parseInt(process.env.API_ID);
-const apiHash = process.env.API_HASH;
-const stringSession = new StringSession(process.env.STRING_SESSION || "");
+// Your API credentials
+const apiId = 14797328;
+const apiHash = "7c1a7af11a78400fb8e522ca17196b78";
 
-const sourceGroupId = BigInt("-1002568140829");
-const targetGroupId = BigInt("-1002578841900");
-const monitoredBotUsername = "a16478293_bot";
+// Session file generated from Python step
+const sessionFile = "anon.session";
 
-(async () => {
-  const client = new TelegramClient({
-    apiId,
-    apiHash,
-    session: stringSession,
+// IDs of your groups (replace with your real groups)
+const sourceGroupId = BigInt(-1002568140829);  // Group where bot sends messages
+const targetGroupId = BigInt(-1002578841900);  // Group to copy messages into
+
+async function main() {
+  const client = new TelegramClient(sessionFile, apiId, apiHash, {
+    connectionRetries: 5,
   });
 
-  await client.login({
-    phoneNumber: async () => process.env.PHONE || (await prompts({ type: "text", name: "value", message: "Phone:" })).value,
-    password: async () => process.env.PASSWORD || (await prompts({ type: "password", name: "value", message: "2FA Password (if any):" })).value,
-    phoneCode: async () => (await prompts({ type: "text", name: "value", message: "Telegram code:" })).value,
-    onError: (err) => console.error(err),
-  });
-
-  console.log("Logged in!");
-  console.log("STRING_SESSION (save this):", client.session.save());
+  await client.start();
+  console.log("Userbot started.");
 
   client.addEventHandler(async (event) => {
-    const message = event.message;
-    const sender = await message.getSender();
+    try {
+      const message = event.message;
+      const sender = await event.getSender();
 
-    if (message.chatId === sourceGroupId && sender?.username === monitoredBotUsername) {
-      if (message.message) {
-        await client.sendMessage(targetGroupId, { message: message.message });
-        console.log("Copied message:", message.message);
+      if (sender?.username === "a16478293_bot" && event.chatId === sourceGroupId) {
+        await client.sendMessage(targetGroupId, {
+          message: message.text || "",
+        });
+        console.log("Copied message without forward tag.");
       }
+    } catch (e) {
+      console.error("Error handling message:", e);
     }
-  }, "NewMessage");
+  });
 
-  // Keep the bot running
-  await client.run();
-})();
+  await client.runUntilDisconnected();
+}
+
+main();
