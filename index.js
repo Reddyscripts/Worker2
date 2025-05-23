@@ -1,49 +1,42 @@
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
-import input from "input";
 import fs from "fs";
 import { Api } from "telegram";
 
-const apiId = 14797328; // replace with your actual api_id
-const apiHash = "7c1a7af11a78400fb8e522ca17196b78"; // replace with your actual api_hash
-const stringSession = new StringSession(fs.readFileSync("anon.session", "utf-8"));
+// Replace with your actual values
+const apiId = 14797328;
+const apiHash = "7c1a7af11a78400fb8e522ca17196b78";
+const session = new StringSession(fs.readFileSync("anon.session", "utf8"));
 
 const sourceGroupId = BigInt("-1002568140829");
 const targetGroupId = BigInt("-1002578841900");
 const botUsername = "a16478293_bot";
 
-const client = new TelegramClient(stringSession, apiId, apiHash, {
+const client = new TelegramClient(session, apiId, apiHash, {
   connectionRetries: 5,
 });
 
 (async () => {
-  await client.start({
-    phoneNumber: async () => await input.text("Number?"),
-    password: async () => await input.text("2FA Password?"),
-    phoneCode: async () => await input.text("Code?"),
-    onError: (err) => console.log(err),
-  });
-
-  console.log("Client started. Listening for messages...");
+  await client.connect();
+  console.log("Client started");
 
   const botEntity = await client.getEntity(botUsername);
 
   client.addEventHandler(async (event) => {
-    const message = event.message;
+    const msg = event.message;
 
     if (
-      message.chatId === sourceGroupId &&
-      message.senderId &&
-      message.senderId.value === botEntity.id
+      msg.chatId === sourceGroupId &&
+      msg.senderId &&
+      msg.senderId.value === botEntity.id
     ) {
       try {
         await client.sendMessage(targetGroupId, {
-          message: message.message,
-          parseMode: "html",
+          message: msg.message,
         });
-        console.log("Message copied.");
+        console.log("Forwarded message.");
       } catch (err) {
-        console.error("Failed to send message:", err);
+        console.error("Error forwarding:", err);
       }
     }
   }, new client.constructor.events.NewMessage({ chats: [sourceGroupId] }));
