@@ -1,6 +1,6 @@
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
-import input from "input";
+import prompts from "prompts";
 
 const apiId = parseInt(process.env.API_ID);
 const apiHash = process.env.API_HASH;
@@ -18,9 +18,9 @@ const monitoredBotUsername = "a16478293_bot";
   });
 
   await client.login({
-    phoneNumber: async () => process.env.PHONE || await input.text("Phone: "),
-    password: async () => process.env.PASSWORD || await input.text("2FA Password (if any): "),
-    phoneCode: async () => await input.text("Telegram code: "),
+    phoneNumber: async () => process.env.PHONE || (await prompts({ type: "text", name: "value", message: "Phone:" })).value,
+    password: async () => process.env.PASSWORD || (await prompts({ type: "password", name: "value", message: "2FA Password (if any):" })).value,
+    phoneCode: async () => (await prompts({ type: "text", name: "value", message: "Telegram code:" })).value,
     onError: (err) => console.error(err),
   });
 
