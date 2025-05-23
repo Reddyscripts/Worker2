@@ -7,7 +7,6 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "input": "^0.0.5",
     "telegram": "^1.14.1"
   }
 }
